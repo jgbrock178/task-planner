@@ -21,6 +21,10 @@ class Task extends Model
         'completed_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'is_completed',
+    ];
+
     /**
      * Get the user that owns the task.
      */
@@ -67,6 +71,15 @@ class Task extends Model
     public function complete()
     {
         $this->completed_at = now();
+        $this->save();
+    }
+
+    /**
+     * Unmarks the task as completed by setting the completed_at timestamp to null.
+     */
+    public function incomplete()
+    {
+        $this->completed_at = null;
         $this->save();
     }
 }

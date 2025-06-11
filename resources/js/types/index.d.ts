@@ -37,3 +37,14 @@ export interface User {
 }
 
 export type BreadcrumbItemType = BreadcrumbItem;
+
+export interface Task {
+    id: number;
+    title: string;
+    description: string | null;
+    is_completed: boolean;
+    user_id: number;
+    completd_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
