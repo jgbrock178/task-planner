@@ -23,6 +23,7 @@ class Task extends Model
 
     protected $appends = [
         'is_completed',
+        'completed_ago',
     ];
 
     /**
@@ -63,6 +64,16 @@ class Task extends Model
     public function getIsCompletedAttribute()
     {
         return ! is_null($this->completed_at);
+    }
+
+    /**
+     * Adds an accessor to get the time since the task was completed in a human-readable format.
+     *
+     * @return string|null
+     */
+    public function getCompletedAgoAttribute()
+    {
+        return $this->completed_at ? $this->completed_at->diffForHumans() : null;
     }
 
     /**

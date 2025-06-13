@@ -18,7 +18,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, LayoutList, ListChecks } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -44,24 +44,20 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'Tasks',
+        href: '/tasks',
+        icon: LayoutList,
+    },
 ];
 
 const rightNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
+
 ];
 </script>
 
 <template>
-    <div>
+    <div class="fixed top-0 z-40 w-full border-b border-sidebar-border bg-white dark:bg-neutral-900">
         <div class="border-b border-sidebar-border/80">
             <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
@@ -117,7 +113,7 @@ const rightNavItems: NavItem[] = [
                     <NavigationMenu class="ml-10 flex h-full items-stretch">
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">
                             <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center">
-                                <Link :href="item.href">
+                                <Link :href="item.href" class="h-full">
                                     <NavigationMenuLink
                                         :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
                                     >
@@ -136,9 +132,9 @@ const rightNavItems: NavItem[] = [
 
                 <div class="ml-auto flex items-center space-x-2">
                     <div class="relative flex items-center space-x-1">
-                        <Button variant="ghost" size="icon" class="group h-9 w-9 cursor-pointer">
+                        <!-- <Button variant="ghost" size="icon" class="group h-9 w-9 cursor-pointer">
                             <Search class="size-5 opacity-80 group-hover:opacity-100" />
-                        </Button>
+                        </Button> -->
 
                         <div class="hidden space-x-1 lg:flex">
                             <template v-for="item in rightNavItems" :key="item.title">
@@ -161,7 +157,7 @@ const rightNavItems: NavItem[] = [
                         </div>
                     </div>
 
-                    <DropdownMenu>
+                    <DropdownMenu :modal="false">
                         <DropdownMenuTrigger :as-child="true">
                             <Button
                                 variant="ghost"

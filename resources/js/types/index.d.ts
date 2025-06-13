@@ -44,7 +44,8 @@ export interface Task {
     description: string | null;
     is_completed: boolean;
     user_id: number;
-    completd_at: string | null;
+    completed_at: date | null;
+    completed_ago: string | null;
     created_at: string;
     updated_at: string;
 }
