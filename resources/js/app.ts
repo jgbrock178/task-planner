@@ -6,6 +6,16 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
 import { initializeTheme } from './composables/useAppearance';
+import PrimeVue from 'primevue/config';
+import Aura from '@primeuix/themes/aura';
+
+// PrimeVue components
+import DataTable     from 'primevue/datatable'
+import Column        from 'primevue/column'
+// import RowReorder    from 'primevue/rowreorder'
+import InputText     from 'primevue/inputtext'
+import Button        from 'primevue/button'
+import ToastService  from 'primevue/toastservice'
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -29,6 +39,20 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(PrimeVue, {
+                ripple: true,
+                theme: {
+                    preset: Aura,
+                    options: {
+                        darkModeSelector: '.dark',
+                    }
+                },
+            })
+            .use(ToastService)
+            .component('DataTable', DataTable)
+            .component('Column', Column)
+            .component('InputText', InputText)
+            .component('Button', Button)
             .mount(el);
     },
     progress: {

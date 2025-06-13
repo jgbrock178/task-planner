@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, watch, computed, nextTick } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { type BreadcrumbItem, type Task } from '@/types';
 import { toast } from 'vue-sonner'
@@ -8,6 +8,37 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ChevronUp, ChevronDown, GripVertical } from 'lucide-vue-next'
+
+// PrimeVue filter state
+const globalFilter = ref<string | null>(null)
+const filters = ref({
+  'global': { value: null, matchMode: 'contains' },
+})
+
+const showReorderButtons = ref(false)
+
+// handle row-reorder event
+function onRowReorder(event: any) {
+    tasks.value = event.value
+}
+
+// accessible move up/down buttons
+function moveUp(index: number) {
+    if (index === 0) return
+    const row = tasks.value.splice(index, 1)[0]
+    tasks.value.splice(index - 1, 0, row)
+}
+function moveDown(index: number) {
+    if (index === tasks.value.length - 1) return
+    const row = tasks.value.splice(index, 1)[0]
+    tasks.value.splice(index + 1, 0, row)
+}
+
+// format dates (optional)
+function formatDate(task: Task) {
+    return task.completed_at ? new Date(task.completed_at).toLocaleString() : '—'
+}
 
 const breadcrumbs: BreadcrumbItem[] = [{
     title: 'Tasks',
@@ -36,6 +67,7 @@ const completedTasks = computed(() =>
 const form = useForm({
     title: '',
 });
+
 
 function addTask() {
     form.post(route('task.store'), {
@@ -72,7 +104,7 @@ function toggleCompleted(task: Task, completed: boolean) {
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 function animateStrikeThenRemove(el: Element, done: () => void) {
@@ -91,7 +123,6 @@ async function onChecked(task: Task, completed: boolean) {
 
     toggleCompleted(task, completed)
 }
-
 </script>
 
 <template>
@@ -99,71 +130,135 @@ async function onChecked(task: Task, completed: boolean) {
     <Head title="Tasks" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 lg:w-2/3 lg:mx-auto 2xl:w-1/2">
+        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl py-4 px-8">
+            <div class="mb-4 flex items-center space-x-2">
+            <Button
+                size="sm"
+                variant="outline"
+                @click="showReorderButtons = !showReorderButtons"
+            >
+                {{ showReorderButtons ? 'Show drag handle' : 'Show buttons' }}
+            </Button>
+            <span class="text-sm text-gray-600">
+                {{ showReorderButtons
+                    ? 'Use the arrows in the Reorder column to move rows'
+                    : 'Drag the handles to reorder rows'
+                }}
+            </span>
+            </div>
 
-            <!-- shadcn Tabs wrapper -->
-            <Tabs defaultValue="todo">
-                <form @submit.prevent="addTask" class="mb-4">
-                    <Label for="task-title" class="mb-1">What do you need to do?</Label>
-                    <div class="flex gap-2">
-                        <Input id="task-title" v-model="form.title" type="text" placeholder="Enter a task..."
-                            :class="{ 'border-red-500': form.errors.title }" />
-                        <Button type="submit" :disabled="form.processing">Add</Button>
-                    </div>
-                    <p v-if="form.errors.title" class="text-red-600 text-sm mt-1">
-                        {{ form . errors . title }}
-                    </p>
-                </form>
+            <DataTable
+                :value="tasks"
+                dataKey="id"
+                rowReorder
+                removableSort
+                :reorderableRows="true"
+                :filters="filters"
+                filterDisplay="menu"
+                :globalFilterFields="['title']"
+                @row-reorder="onRowReorder"
+            >
+                <!-- drag handle -->
+                <Column
+                    rowReorder
+                    class="w-5 p-0!"
+                    v-if="!showReorderButtons"
+                >
+                    <template #rowreordericon>
+                        <div
+                            class="py-2 px-1 flex items-center hover:bg-gray-100 rounded cursor-move"
+                            data-pc-section="reorderablerowhandle"
+                            draggable="true"
+                        >
+                            <GripVertical
+                                class="size-5 hover:bg-gray-100"
+                            />
+                        </div>
+                    </template>
+                </Column>
+                <!-- up/down buttons -->
+                <Column
+                    header="Reorder"
+                    class="w-10 px-0!"
+                    v-if="showReorderButtons"
+                >
+                    <template #body="slotProps">
+                        <Button
+                            variant="outline"
+                            class="p-1 size-6 rounded-r-none"
+                            @click="moveUp(slotProps.rowIndex)"
+                            :disabled="slotProps.rowIndex === 0"
+                            aria-label="Move up"
+                        >
+                            <ChevronUp class="size-4" />
+                        </Button>
 
-                <TabsList class="border-b w-full">
-                    <TabsTrigger value="todo">To do</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                </TabsList>
-
-                <!-- To-do Pane -->
-                <TabsContent value="todo" class="pt-4">
-
-                    <transition-group name="task" @leave="animateStrikeThenRemove" tag="ul" class="space-y-2">
-                        <li v-for="task in todoTasks" :key="task.id"
-                            class="flex items-center p-2 border rounded-lg bg-gray-50 transition-colors">
+                        <Button
+                            variant="outline"
+                            class="p-1 size-6 rounded-l-none"
+                            @click="moveDown(slotProps.rowIndex)"
+                            :disabled="slotProps.rowIndex === tasks.length - 1"
+                            aria-label="Move down"
+                        >
+                            <ChevronDown class="size-4" />
+                        </Button>
+                    </template>
+                </Column>
+                <Column class="w-5">
+                    <template #body="slotProps">
+                        <div class="flex h-full items-center">
                             <input
                                 type="checkbox"
-                                :checked="task.is_completed"
-                                @change="e => onChecked(task, (e.target as HTMLInputElement).checked)"
-                                class="mr-3 size-5"
+                                :checked="slotProps.data.is_completed"
+                                @change="e => onChecked(
+                                    slotProps.data,
+                                        (e.target as HTMLInputElement).checked
+                                    )"
+                                class="size-5 accent-green-600 focus:ring-green-500"
                             />
-                            <span>{{ task.title }}</span>
-                        </li>
-                    </transition-group>
-                </TabsContent>
+                        </div>
+                    </template>
+                </Column>
 
-                <!-- Completed Pane -->
-                <TabsContent value="completed" class="pt-4">
-                    <h2 class="text-lg font-semibold mb-2">Completed Tasks</h2>
+                <!-- Task title -->
+                <Column
+                    field="title"
+                    header="Task"
+                    sortable
+                    filter
+                    filterPlaceholder="Filter by title"
+                    >
+                </Column>
 
-                    <transition-group name="task" tag="ul" class="space-y-2">
-                        <li v-for="task in completedTasks" :key="task.id"
-                            class="flex items-center p-2 border rounded-lg bg-green-100 text-green-900 transition-colors">
-                            <input
-                                type="checkbox"
-                                :checked="task.is_completed"
-                                @change="e => onChecked(task, (e.target as HTMLInputElement).checked)"
-                                class="mr-3 size-5"
-                            />
-                            <span>{{ task.title }}</span>
-                            <span class="ml-auto text-xs text-gray-500">
-                                Completed {{ task.completed_at ? new Date(task.completed_at).toLocaleString() : '' }}
-                            </span>
-                        </li>
-                    </transition-group>
-                </TabsContent>
-            </Tabs>
+                <!-- Completed at -->
+                <Column
+                    field="completed_at"
+                    header="Completed"
+                    sortable
+                    filter
+                    filterPlaceholder="Filter by date"
+                    >
+                    <template #body="{ data }">
+                        {{ data.completed_at
+                            ? new Date(data.completed_at).toLocaleString()
+                            : '—'
+                        }}
+                    </template>
+                </Column>
+            </DataTable>
         </div>
     </AppLayout>
 </template>
 
 
 <style scoped>
+
+:deep(.p-datatable .p-datatable-tbody > tr > td),
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 14px;
+}
 
 input[type="checkbox"] {
     cursor: pointer;
