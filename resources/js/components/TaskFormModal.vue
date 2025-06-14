@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, defineEmits, watch } from 'vue'
+import { defineProps, defineEmits, watch, ref, nextTick } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import PrioritySelect from '@/components/PrioritySelect.vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
+import { CircleAlert } from 'lucide-vue-next'
 
 interface TaskPayload {
     [key: string]: any
@@ -65,13 +66,22 @@ watch(
     { immediate: true }
 )
 
-// close handler
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (!isOpen) {
+      form.clearErrors()
+      form.reset('title','description','priority','due_date')
+      form.id = undefined
+    }
+  }
+)
+
 function close() {
     emit('update:open', false)
     form.reset('title','description','priority','due_date')
 }
 
-// submit handler
 function submit() {
     if (form.id) {
         form.put(route('tasks.update', form.id), {
@@ -106,17 +116,22 @@ function submit() {
 
             <form @submit.prevent="submit" class="space-y-6 pt-2">
                 <div class="grid w-full items-center gap-1.5">
-                    <Label for="task-title">
-                        Task Title
+                    <Label for="task-title" class="flex items-center gap-2">
+                        <span>Task Title</span>
+                        <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">Required</span>
                     </Label>
                     <Input
                         id="task-title"
                         label="Title"
                         v-model="form.title"
                         :error="form.errors.title"
-                        required
                         placeholder="What do you want to do?"
+                        :class="form.errors.title ? 'border-red-500 bg-red-50' : ''"
                     />
+                    <p v-if="form.errors.title" class="text-red-600 text-sm flex items-center">
+                        <CircleAlert class="inline mr-1 size-5" />
+                        {{ form.errors.title }}
+                    </p>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="grid w-full items-center gap-1.5">
@@ -135,6 +150,7 @@ function submit() {
                             Due Date
                         </Label>
                         <VueDatePicker
+                            placeholder="Select a date"
                             v-model="form.due_date"
                             :enable-time-picker="false"
                             :auto-apply="true"

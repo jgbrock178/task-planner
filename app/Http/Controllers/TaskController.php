@@ -41,7 +41,7 @@ class TaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ], [
-            'title.required' => 'The tasks needs a title.',
+            'title.required' => 'Oops. The task needs a title.',
             'title.max' => 'Your title is too long. It can only be up to 255 characters.',
         ]);
 
@@ -66,7 +66,7 @@ class TaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ], [
-            'title.required' => 'The task needs a title.',
+            'title.required' => 'Oops. The task needs a title.',
             'title.max' => 'Your title is too long. It can only be up to 255 characters.',
         ]);
 
