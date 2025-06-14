@@ -10,14 +10,19 @@ use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $priority = $request->query('priority');
+
         $tasks = Task::where('user_id', Auth::id())
+            ->when($priority, fn ($q) => $q->where('priority', $priority))
             ->orderBy('sort_order')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('Tasks', [
             'tasks' => $tasks,
+            'priority' => $priority,
         ]);
     }
 
@@ -27,17 +32,41 @@ class TaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ], [
-            'title.required' => 'You\'ve not entered a task.',
-            'title.max' => 'You\'re title is too long. It can only be up to 255 characters.',
+            'title.required' => 'The tasks needs a title.',
+            'title.max' => 'Your title is too long. It can only be up to 255 characters.',
         ]);
 
         Task::create([
             'title' => $request->title,
             'description' => $request->description,
             'user_id' => Auth::id(),
+            'priority' => $request->priority,
         ]);
 
         return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
+    }
+
+    public function update(Request $request, Task $task)
+    {
+        if ($task->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ], [
+            'title.required' => 'The task needs a title.',
+            'title.max' => 'Your title is too long. It can only be up to 255 characters.',
+        ]);
+
+        $task->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'priority' => $request->priority,
+        ]);
+
+        return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
 
     public function toggleCompleted(Task $task)

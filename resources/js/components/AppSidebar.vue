@@ -11,13 +11,28 @@ import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: route('dashboard'),
         icon: LayoutGrid,
     },
     {
-        title: 'Tasks',
-        href: '/tasks',
+        title: 'All Tasks',
+        href: route('tasks.index'),
         icon: LayoutList,
+    },
+];
+
+const priorityItems: NavItem[] = [
+    {
+        title: 'High Priority',
+        href: route('tasks.index', { priority: 'high' }),
+    },
+    {
+        title: 'Medium Priority',
+        href: route('tasks.index', { priority: 'medium' }),
+    },
+    {
+        title: 'Low Priority',
+        href: route('tasks.index', { priority: 'low' }),
     },
 ];
 
@@ -42,6 +57,8 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" groupLabel="Where to?" />
+
+            <NavMain :items="priorityItems" groupLabel="Filter Tasks by Priority" />
         </SidebarContent>
 
         <SidebarFooter>

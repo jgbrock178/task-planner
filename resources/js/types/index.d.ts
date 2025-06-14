@@ -43,6 +43,7 @@ export interface Task {
     title: string;
     description: string | null;
     is_completed: boolean;
+    priority: 'none' | 'low' | 'medium' | 'high';
     user_id: number;
     completed_at: date | null;
     completed_ago: string | null;

@@ -19,9 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/settings/api-tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
-    Route::post('/tasks', [TaskController::class, 'store'])->name('task.store');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::post('/tasks/reorder', [TaskController::class, 'reorder'])->name('tasks.reorder');
-    Route::patch('/tasks/{task}/toggle-completed', [TaskController::class, 'toggleCompleted'])->name('task.toggleCompleted');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::patch('/tasks/{task}/toggle-completed', [TaskController::class, 'toggleCompleted'])->name('tasks.toggleCompleted');
 });
 
 require __DIR__.'/settings.php';

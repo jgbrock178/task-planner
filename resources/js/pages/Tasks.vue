@@ -5,13 +5,32 @@ import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { type BreadcrumbItem, type Task } from '@/types';
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown, GripVertical, Check, ArrowUpDown } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, GripVertical, Check, CircleCheck } from 'lucide-vue-next'
+import TaskFormModal from '@/components/TaskFormModal.vue'
 
 // PrimeVue filter state
 const globalFilter = ref<string | null>(null)
 const filters = ref({
   'global': { value: null, matchMode: 'contains' },
 })
+
+// modal state
+const isModalOpen = ref(false)
+const taskToEdit = ref<Task|undefined>(undefined)
+
+function openCreate(task: undefined) {
+    taskToEdit.value = undefined
+    isModalOpen.value = true
+}
+function openEdit(task: Task) {
+    taskToEdit.value = task
+    isModalOpen.value = true
+}
+// refresh after save
+function onSaved() {
+  // simple Inertia reload
+    window.location.reload()
+}
 
 const showReorderButtons = ref(false)
 const showCompleted = ref(false)
@@ -151,7 +170,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
         task.is_completed = completed
 
         router.patch(
-            route('task.toggleCompleted', task.id),
+            route('tasks.toggleCompleted', task.id),
             { completed },
             {
                 preserveScroll: true,
@@ -176,7 +195,9 @@ function onChecked(task: Task, completed: boolean, e: Event) {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl py-4 px-8">
             <div class="mb-4 flex items-center space-x-2">
+                <Button @click="openCreate">New Task</Button>
                 <Button
+                    v-if="completedTasks.length > 0"
                     size="sm"
                     variant="outline"
                     @click="showCompleted = !showCompleted"
@@ -195,7 +216,12 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                 </Button> -->
             </div>
 
+            <div v-if="filteredTasks.length === 0" class=" text-gray-500">
+                <p>No tasks found. Why not add some?</p>
+            </div>
+
             <DataTable
+                v-if="filteredTasks.length > 0"
                 v-model:value="filteredTasks"
                 dataKey="id"
                 rowReorder
@@ -224,6 +250,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                         </div>
                     </template>
                 </Column>
+
                 <!-- up/down buttons -->
                 <Column
                     header="Reorder"
@@ -254,9 +281,19 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                         </Button>
                     </template>
                 </Column>
-                <Column class="w-5">
+
+                <!-- Checkbox for completion -->
+                <Column
+                    class="w-5"
+                    field="is_completed"
+                    sortable
+                >
+                    <template #header>
+                        <CircleCheck class="size-5" />
+                    </template>
+
                     <template #body="{ data: task }">
-                        <div class="flex h-full items-center">
+                        <div class="flex h-full items-center justify-center">
                             <input
                                 type="checkbox"
                                 :checked="task.is_completed"
@@ -276,8 +313,38 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     filterPlaceholder="Filter by title"
                 >
                     <template #body="{ data: task }">
-                        <span data-task-title :class="{ strike: task.is_completed }">
-                            {{ task.title }}
+                        <span>
+                            <button
+                                data-task-title
+                                @click="openEdit(task)"
+                                class="hover:underline cursor-pointer"
+                                :class="{ strike: task.is_completed }"
+                            >
+                                {{ task.title }}
+                            </button>
+                        </span>
+                    </template>
+                </Column>
+
+                <!-- Priority -->
+                <Column
+                    field="priority"
+                    header="Priority"
+                    sortable
+                    filter
+                    filterPlaceholder="Filter by priority"
+                >
+                    <template #body="{ data }">
+                        <span
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                            :class="{
+                                'bg-red-100 text-red-800': data.priority === 'high',
+                                'bg-yellow-100 text-yellow-800': data.priority === 'medium',
+                                'bg-green-100 text-green-800': data.priority === 'low',
+                                'bg-gray-100 text-gray-800': data.priority === 'none',
+                            }"
+                        >
+                            {{ data.priority.charAt(0).toUpperCase() + data.priority.slice(1) }}
                         </span>
                     </template>
                 </Column>
@@ -299,6 +366,12 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                 </Column>
             </DataTable>
         </div>
+
+        <TaskFormModal
+            v-model:open="isModalOpen"
+            :task-to-edit="taskToEdit"
+            @saved="onSaved"
+        />
     </AppLayout>
 </template>
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -16,15 +17,24 @@ class Task extends Model
         'user_id',
         'completed_at',
         'sort_order',
+        'priority',
     ];
 
     protected $casts = [
         'completed_at' => 'datetime',
+        'sort_order' => 'integer',
     ];
 
     protected $appends = [
         'is_completed',
         'completed_ago',
+    ];
+
+    public const PRIORITY_ORDER = [
+        'high',
+        'medium',
+        'low',
+        'none',
     ];
 
     /**
@@ -55,6 +65,32 @@ class Task extends Model
     public function scopeNotCompleted($query)
     {
         return $query->whereNull('completed_at');
+    }
+
+    /**
+     * Scope a query to order by priority.
+     *
+     * Usage: Task::orderByPriority()->get();
+     *        Task::orderByPriority('desc')->get();
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  string  $direction  'asc' or 'desc'
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOrderByPriority(Builder $query, string $direction = 'asc')
+    {
+        $dir = strcasecmp($direction, 'desc') === 0 ? 'DESC' : 'ASC';
+
+        $case = <<<'SQL'
+        CASE priority
+            WHEN 'high'   THEN 1
+            WHEN 'medium' THEN 2
+            WHEN 'low'    THEN 3
+            ELSE 4
+        END
+        SQL;
+
+        return $query->orderByRaw("$case $dir");
     }
 
     /**
