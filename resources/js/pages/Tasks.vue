@@ -286,7 +286,6 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                 <Column
                     class="w-5"
                     field="is_completed"
-                    sortable
                 >
                     <template #header>
                         <CircleCheck class="size-5" />
