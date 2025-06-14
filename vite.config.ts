@@ -8,7 +8,10 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.ts'],
+            input: [
+                'resources/js/app.ts',
+                'resources/css/app.css',
+            ],
             ssr: 'resources/js/ssr.ts',
             refresh: true,
         }),
@@ -26,6 +29,17 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, './resources/js'),
             'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
+        },
+    },
+    build: {
+    // ensure manifest generation and outDir match Laravel defaults
+        manifest: true,
+        outDir: 'public/build',
+        rollupOptions: {
+            input: {
+                app: resolve(__dirname, 'resources/js/app.ts'),
+                styles: resolve(__dirname, 'resources/css/app.css'),
+            },
         },
     },
 });
