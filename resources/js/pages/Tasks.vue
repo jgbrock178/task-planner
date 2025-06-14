@@ -5,7 +5,7 @@ import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { type BreadcrumbItem, type Task } from '@/types';
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown, GripVertical, Check, CircleCheck } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, GripVertical, Check, CircleCheck, ArrowUp, ArrowRight, ArrowDown } from 'lucide-vue-next'
 import TaskFormModal from '@/components/TaskFormModal.vue'
 
 // PrimeVue filter state for DataTable
@@ -370,6 +370,9 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                                 'bg-gray-100 text-gray-800': data.priority === 'none',
                             }"
                         >
+                            <ArrowUp v-if="data.priority === 'high'" class="inline size-4 me-1" />
+                            <ArrowRight v-if="data.priority === 'medium'" class="inline size-4 me-1" />
+                            <ArrowDown v-if="data.priority === 'low'" class="inline size-4 me-1" />
                             {{ data.priority.charAt(0).toUpperCase() + data.priority.slice(1) }}
                         </span>
                     </template>
