@@ -45,7 +45,8 @@ export interface Task {
     is_completed: boolean;
     priority: 'none' | 'low' | 'medium' | 'high';
     user_id: number;
-    completed_at: date | null;
+    due_date: date | null;
+    completed_at: string;
     completed_ago: string | null;
     created_at: string;
     updated_at: string;

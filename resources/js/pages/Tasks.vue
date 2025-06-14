@@ -325,6 +325,23 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     </template>
                 </Column>
 
+                <!-- Due date -->
+                <Column
+                    field="due_date"
+                    header="Due Date"
+                    sortable
+                    filter
+                    filterPlaceholder="Filter by date"
+                >
+
+                    <template #body="{ data }">
+                        {{ data.due_date
+                            ? new Date(data.due_date).toLocaleDateString()
+                            : '—'
+                        }}
+                    </template>
+                </Column>
+
                 <!-- Priority -->
                 <Column
                     field="priority"
@@ -358,9 +375,17 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     >
                     <template #body="{ data }">
                         {{ data.completed_at
-                            ? new Date(data.completed_at).toLocaleString()
-                            : '—'
-                        }}
+                            ? new Intl.DateTimeFormat('en-GB', {
+                                day:    '2-digit',
+                                month:  '2-digit',
+                                year:   'numeric',
+                                hour:    'numeric',
+                                minute:  '2-digit',
+                                hour12:  true
+                            })
+                            .format(new Date(data.completed_at))
+                            .replace(',', ' - ')  // remove the built-in comma
+                            : '—' }}
                     </template>
                 </Column>
             </DataTable>

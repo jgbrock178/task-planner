@@ -16,6 +16,8 @@ import Column        from 'primevue/column'
 import InputText     from 'primevue/inputtext'
 import Button        from 'primevue/button'
 import ToastService  from 'primevue/toastservice'
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -53,6 +55,7 @@ createInertiaApp({
             .component('Column', Column)
             .component('InputText', InputText)
             .component('Button', Button)
+            .component('VueDatePicker', VueDatePicker)
             .mount(el);
     },
     progress: {

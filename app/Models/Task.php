@@ -18,11 +18,13 @@ class Task extends Model
         'completed_at',
         'sort_order',
         'priority',
+        'due_date',
     ];
 
     protected $casts = [
         'completed_at' => 'datetime',
         'sort_order' => 'integer',
+        'due_date' => 'date',
     ];
 
     protected $appends = [

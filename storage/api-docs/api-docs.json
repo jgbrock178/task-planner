@@ -60,6 +60,21 @@
                                         "type": "string",
                                         "example": "In the park",
                                         "nullable": true
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "high",
+                                            "medium",
+                                            "low",
+                                            "none"
+                                        ],
+                                        "example": "medium"
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-06-15"
                                     }
                                 },
                                 "type": "object"
@@ -160,6 +175,22 @@
                     "is_completed": {
                         "type": "boolean",
                         "example": false
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": [
+                            "high",
+                            "medium",
+                            "low",
+                            "none"
+                        ],
+                        "example": "medium"
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-06-15",
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",

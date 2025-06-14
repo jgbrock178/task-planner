@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import PrioritySelect from '@/components/PrioritySelect.vue'
+import VueDatePicker from '@vuepic/vue-datepicker'
 
 interface TaskPayload {
     [key: string]: any
@@ -14,11 +15,18 @@ interface TaskPayload {
     title: string
     description?: string
     priority?: 'high' | 'medium' | 'low' | 'none'
+    due_date?: Date
 }
 
 const props = defineProps<{
-  open: boolean
-  taskToEdit?: { id: number; title: string; description?: string; priority?: 'high' | 'medium' | 'low' | 'none' }
+    open: boolean
+    taskToEdit?: {
+        id: number;
+        title: string;
+        description?: string;
+        priority?: 'high' | 'medium' | 'low' | 'none'
+        due_date?: Date;
+    }
 }>()
 
 const emit = defineEmits<{
@@ -32,26 +40,26 @@ const form = useForm<TaskPayload>({
     title: props.taskToEdit?.title ?? '',
     description: props.taskToEdit?.description ?? '',
     priority: props.taskToEdit?.priority ?? 'none',
+    due_date: props.taskToEdit?.due_date ?? undefined,
 })
 
 watch(
     () => props.taskToEdit,
     (t) => {
-        // clear any validation errors
         form.clearErrors()
 
         if (t) {
-            // editing: load their values in
-            form.id          = t.id
-            form.title       = t.title
+            form.id = t.id
+            form.title = t.title
             form.description = t.description ?? ''
-            form.priority    = t.priority ?? 'none'
+            form.priority = t.priority ?? 'none'
+            form.due_date = t.due_date ?? undefined
         } else {
-            // creating: wipe everything out
             form.id          = undefined
             form.title       = ''
             form.description = ''
             form.priority    = 'none'
+            form.due_date    = undefined
         }
     },
     { immediate: true }
@@ -60,7 +68,7 @@ watch(
 // close handler
 function close() {
     emit('update:open', false)
-    form.reset('title','description')
+    form.reset('title','description','priority','due_date')
 }
 
 // submit handler
@@ -96,7 +104,7 @@ function submit() {
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="space-y-4 pt-2">
+            <form @submit.prevent="submit" class="space-y-6 pt-2">
                 <div class="grid w-full items-center gap-1.5">
                     <Label for="task-title">
                         Task Title
@@ -110,6 +118,30 @@ function submit() {
                         placeholder="What do you want to do?"
                     />
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="grid w-full items-center gap-1.5">
+                        <Label for="task-priority">
+                            Task Priority
+                        </Label>
+                        <PrioritySelect
+                            id="task-priority"
+                            v-model="form.priority"
+                            :error="form.errors.priority"
+                            class="w-full"
+                        />
+                    </div>
+                    <div class="datepicker grid w-full items-center gap-1.5">
+                        <Label for="task-due-date">
+                            Due Date
+                        </Label>
+                        <VueDatePicker
+                            v-model="form.due_date"
+                            :enable-time-picker="false"
+                            :auto-apply="true"
+                            format="dd/MM/yyyy"
+                        />
+                    </div>
+                </div>
                 <div class="grid w-full items-center gap-1.5">
                     <Label for="task-description">
                         Task Description
@@ -121,17 +153,6 @@ function submit() {
                         :error="form.errors.description"
                         class="resize-y h-24"
                         placeholder="Add any further details about the task here...."
-                    />
-                </div>
-                <div class="grid w-full items-center gap-1.5">
-                    <Label for="task-priority">
-                        Task Priority
-                    </Label>
-                    <PrioritySelect
-                        id="task-priority"
-                        v-model="form.priority"
-                        :error="form.errors.priority"
-                        class="w-full"
                     />
                 </div>
 
@@ -147,3 +168,13 @@ function submit() {
         </DialogContent>
     </Dialog>
 </template>
+
+<style scoped>
+
+.datepicker {
+    --dp-font-size: 14px;
+    --dp-preview-font-size: 14px;
+    --dp-border-radius: 6px;
+}
+
+</style>

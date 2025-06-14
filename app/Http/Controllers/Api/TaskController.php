@@ -35,6 +35,8 @@ use App\Http\Controllers\Controller;
  *   @OA\Property(property="title",         type="string", example="Buy groceries"),
  *   @OA\Property(property="description",   type="string", nullable=true, example="Milk, Eggs"),
  *   @OA\Property(property="is_completed",  type="boolean", example=false),
+ *   @OA\Property(property="priority",      type="string", enum={"high", "medium", "low", "none"}, example="medium"),
+ *   @OA\Property(property="due_date",      type="string", format="date", nullable=true, example="2025-06-15"),
  *   @OA\Property(property="created_at",    type="string", format="date-time", example="2025-06-14T12:00:00Z"),
  *   @OA\Property(property="updated_at",    type="string", format="date-time", example="2025-06-14T12:00:00Z"),
  *   @OA\Property(property="completed_at",  type="string", format="date-time", nullable=true, example="2025-06-14T13:00:00Z")
@@ -82,7 +84,9 @@ class TaskController extends Controller
      *       required={"title"},
      *
      *       @OA\Property(property="title",       type="string", example="Walk the dog"),
-     *       @OA\Property(property="description", type="string", example="In the park", nullable=true)
+     *       @OA\Property(property="description", type="string", example="In the park", nullable=true),
+     *       @OA\Property(property="priority",    type="string", enum={"high", "medium", "low", "none"}, example="medium"),
+     *       @OA\Property(property="due_date",    type="string", format="date", example="2025-06-15")
      *     )
      *   ),
      *
@@ -111,6 +115,8 @@ class TaskController extends Controller
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'user_id' => $request->user()->id,
+            'priority' => $request->input('priority', 'none'),
+            'due_date' => $request->input('due_date', null),
         ]);
 
         return response()->json($task, 201);

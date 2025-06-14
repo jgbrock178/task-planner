@@ -36,7 +36,7 @@ const selected = computed(() =>
 
 <template>
     <Select v-model="localValue">
-        <SelectTrigger :id="id" class="w-[180px]">
+        <SelectTrigger :id="id" class="w-full">
             <div class="flex items-center space-x-2">
                 <span
                     :class="['h-2 w-2 rounded-full', selected.colorClass]"
