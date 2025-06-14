@@ -168,7 +168,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
     const titleSpan = tr.querySelector('[data-task-title]') as HTMLElement
     if (titleSpan && completed) {
         titleSpan.classList.add('strike')
-        tr.classList.add('bg-green-100!')
+        tr.classList.add('completed-background')
     } else {
         titleSpan.classList.remove('strike')
     }
@@ -409,24 +409,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
     </AppLayout>
 </template>
 
-
-<style scoped>
-
-:deep(.p-datatable .p-datatable-tbody > tr > td),
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-size: 14px;
-}
-
-:deep(.p-datatable tbody tr:focus-within) {
-    background-color: var(--color-gray-100);
-}
-
-:deep(.p-datatable tbody tr:hover) {
-    background-color: var(--color-gray-50);
-}
-
+<style>
 input[type="checkbox"] {
     cursor: pointer;
     transition-duration: 100ms;
@@ -458,4 +441,41 @@ input[type="checkbox"]:checked {
 .task-leave-to {
     opacity: 0;
 }
+
+.p-datatable .p-datatable-tbody > tr > td,
+.p-datatable .p-datatable-thead > tr > th {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 14px;
+}
+
+.p-datatable {
+    --p-datatable-row-hover-background: #f9fafb; /* Tailwind gray-50 */
+}
+
+.dark .p-datatable {
+    --p-datatable-row-background: transparent;
+    --p-datatable-row-hover-background: #374151;
+}
+
+.completed-background {
+    background-color: var(--color-green-100) !important;
+}
+
+.dark .completed-background {
+    background-color: var(--color-green-900) !important;
+}
+
+.dark .p-datatable tr:hover {
+    background-color: var(--color-gray-800) !important;
+}
+
+.p-datatable tr.completed-background:hover {
+    background-color: var(--color-green-100) !important;
+}
+
+.dark .p-datatable tr.completed-background:hover {
+    background-color: var(--color-green-800) !important;
+}
+
 </style>

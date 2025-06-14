@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, defineEmits, watch, ref, nextTick } from 'vue'
+import { defineProps, defineEmits, watch, ref, nextTick, computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label'
 import PrioritySelect from '@/components/PrioritySelect.vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import { CircleAlert } from 'lucide-vue-next'
+import { useAppearance } from '@/composables/useAppearance'
+import { useMediaQuery } from '@vueuse/core'
 
 interface TaskPayload {
     [key: string]: any
@@ -18,6 +20,14 @@ interface TaskPayload {
     priority?: 'high' | 'medium' | 'low' | 'none'
     due_date?: Date
 }
+
+const { appearance } = useAppearance()
+const prefersDark = useMediaQuery('(prefers-color-scheme: dark)')
+const isDark = computed(() => {
+    if (appearance.value === 'dark') return true
+    if (appearance.value === 'light') return false
+    return prefersDark.value
+})
 
 const props = defineProps<{
     open: boolean
@@ -155,6 +165,7 @@ function submit() {
                             :enable-time-picker="false"
                             :auto-apply="true"
                             format="dd/MM/yyyy"
+                            :dark="isDark"
                         />
                     </div>
                 </div>
@@ -186,11 +197,19 @@ function submit() {
 </template>
 
 <style scoped>
-
 .datepicker {
     --dp-font-size: 14px;
     --dp-preview-font-size: 14px;
     --dp-border-radius: 6px;
 }
+</style>
 
+<style>
+.dp__theme_dark {
+    --dp-background-color: oklch(26.9% 0 0 / 0.3);
+}
+
+.dp__menu.dp__theme_dark {
+    --dp-background-color: var(--color-neutral-950) !important;
+}
 </style>

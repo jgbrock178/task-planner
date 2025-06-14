@@ -14,5 +14,5 @@ defineProps<Props>();
 </script>
 
 <template>
-    <BadgeCheck class="size-5"></BadgeCheck>
+    <BadgeCheck class="size-5 dark:text-blue-700"></BadgeCheck>
 </template>
