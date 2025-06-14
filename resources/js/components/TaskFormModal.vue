@@ -109,6 +109,25 @@ function submit() {
         })
     }
 }
+
+function onDelete() {
+    if (!form.id) return
+
+    if (!confirm('Are you sure you want to delete this task?')) {
+        return
+    }
+
+    form.delete(route('tasks.destroy', form.id), {
+        onSuccess: () => {
+            emit('saved')        // let parent know to refresh
+            emit('update:open', false)  // close the modal
+        },
+        onError: () => {
+            // optionally show a toast or error
+            alert('Failed to delete. Please try again.')
+        },
+    })
+}
 </script>
 
 <template>
@@ -187,6 +206,17 @@ function submit() {
                     <!-- <DialogClose asChild>
                         <Button variant="ghost">Cancel</Button>
                     </DialogClose> -->
+
+
+                    <Button
+                        v-if="form.id"
+                        variant="destructive"
+                        type="button"
+                        :disabled="form.processing"
+                        @click="onDelete"
+                    >
+                        Delete
+                    </Button>
                     <Button type="submit" :disabled="form.processing">
                         {{ form.id ? 'Save Changes' : 'Create Task' }}
                     </Button>
