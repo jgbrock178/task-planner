@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
     Route::post('/tasks', [TaskController::class, 'store'])->name('task.store');
+    Route::post('/tasks/reorder', [TaskController::class, 'reorder'])->name('tasks.reorder');
     Route::patch('/tasks/{task}/toggle-completed', [TaskController::class, 'toggleCompleted'])->name('task.toggleCompleted');
 });
 

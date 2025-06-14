@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
@@ -12,7 +13,7 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
+            ->orderBy('sort_order')
             ->get();
 
         return Inertia::render('Tasks', [
@@ -52,5 +53,27 @@ class TaskController extends Controller
         }
 
         return redirect()->route('tasks.index')->with('success', 'Task marked as completed.');
+    }
+
+    public function reorder(Request $request)
+    {
+        $userId = $request->user()->id;
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => "required|integer|exists:tasks,id,user_id,{$userId}",
+        ]);
+
+        $userId = $request->user()->id;
+        $ids = $request->order;
+
+        DB::transaction(function () use ($ids, $userId) {
+            foreach ($ids as $position => $id) {
+                Task::where('id', $id)
+                    ->where('user_id', $userId)
+                    ->update(['sort_order' => $position]);
+            }
+        });
+
+        return redirect()->route('tasks.index')->with('success', 'Tasks order saved.');
     }
 }

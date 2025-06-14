@@ -4,11 +4,8 @@ import { ref, watch, computed, nextTick } from 'vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { type BreadcrumbItem, type Task } from '@/types';
 import { toast } from 'vue-sonner'
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ChevronUp, ChevronDown, GripVertical } from 'lucide-vue-next'
+import { ChevronUp, ChevronDown, GripVertical, Check, ArrowUpDown } from 'lucide-vue-next'
 
 // PrimeVue filter state
 const globalFilter = ref<string | null>(null)
@@ -17,10 +14,32 @@ const filters = ref({
 })
 
 const showReorderButtons = ref(false)
+const showCompleted = ref(false)
+const form = useForm({ order: [] as number[] })
+
+const filteredTasks = computed(() => {
+    return tasks.value.filter(task => {
+        if (showCompleted.value) return true
+        return !task.is_completed
+    })
+})
 
 // handle row-reorder event
 function onRowReorder(event: any) {
     tasks.value = event.value
+    form.order = tasks.value.map(t => t.id)
+
+    // send to server
+    form.post(route('tasks.reorder'), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Tasks reordered successfully');
+        },
+        onError: (errors) => {
+           console.error('Reorder failed', errors)
+        }
+    })
 }
 
 // accessible move up/down buttons
@@ -82,11 +101,6 @@ const completedTasks = computed(() =>
         )
 );
 
-const form = useForm({
-    title: '',
-});
-
-
 function addTask() {
     form.post(route('task.store'), {
         onSuccess: () => {
@@ -97,26 +111,6 @@ function addTask() {
             toast.error('Error adding task', {
                 description: errors.title ?? 'Please check your input.',
             })
-        },
-    });
-}
-
-function toggleCompleted(task: Task, completed: boolean) {
-    task.is_completed = completed
-
-    router.patch(route('task.toggleCompleted', task.id), {
-        completed
-    }, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-            toast.success(`Task marked as ${completed ? 'completed' : 'incomplete'}`);
-        },
-        onError: (errors) => {
-            task.is_completed = !completed
-            toast.error('Error updating task', {
-                description: errors.message?.[0] ?? 'Please try again.',
-            });
         },
     });
 }
@@ -133,13 +127,45 @@ function animateStrikeThenRemove(el: Element, done: () => void) {
     setTimeout(done, 500);
 }
 
-async function onChecked(task: Task, completed: boolean) {
-    task.is_completed = completed
+function onChecked(task: Task, completed: boolean, e: Event) {
+    const tr = (e.target as HTMLElement).closest('tr')
 
-    // wait 150ms so the native checkbox paints
-    await sleep(150)
+    // Include a fallback just in case.
+    if (!tr) {
+        return toggleNow();
+    }
 
-    toggleCompleted(task, completed)
+    // Find the title and add the strike
+    const titleSpan = tr.querySelector('[data-task-title]') as HTMLElement
+    if (titleSpan && completed) {
+        titleSpan.classList.add('strike')
+        tr.classList.add('bg-green-100!')
+    } else {
+        titleSpan.classList.remove('strike')
+    }
+
+    // Wait for the transition to finish before toggling
+    setTimeout(toggleNow, 500)
+
+    function toggleNow() {
+        task.is_completed = completed
+
+        router.patch(
+            route('task.toggleCompleted', task.id),
+            { completed },
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                toast.success(
+                    `Task marked as ${completed ? 'complete' : 'incomplete'}`
+                ),
+                onError: () => {
+                task.is_completed = !completed
+                toast.error('Error updating task')
+                },
+            }
+        )
+    }
 }
 </script>
 
@@ -150,23 +176,27 @@ async function onChecked(task: Task, completed: boolean) {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl py-4 px-8">
             <div class="mb-4 flex items-center space-x-2">
-            <Button
-                size="sm"
-                variant="outline"
-                @click="showReorderButtons = !showReorderButtons"
-            >
-                {{ showReorderButtons ? 'Show drag handle' : 'Show buttons' }}
-            </Button>
-            <span class="text-sm text-gray-600">
-                {{ showReorderButtons
-                    ? 'Use the arrows in the Reorder column to move rows'
-                    : 'Drag the handles to reorder rows'
-                }}
-            </span>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    @click="showCompleted = !showCompleted"
+                >
+                    <Check class="size-4" />
+                    {{ showCompleted ? 'Hide completed tasks' : 'Show completed tasks' }}
+                </Button>
+
+                <!-- <Button
+                    size="sm"
+                    variant="outline"
+                    @click="showReorderButtons = !showReorderButtons"
+                >
+                    <ArrowUpDown class="size-4" />
+                    {{ showReorderButtons ? 'Hide Arrow Buttons' : 'Show Arrow Buttons' }}
+                </Button> -->
             </div>
 
             <DataTable
-                v-model:value="tasks"
+                v-model:value="filteredTasks"
                 dataKey="id"
                 rowReorder
                 removableSort
@@ -184,12 +214,12 @@ async function onChecked(task: Task, completed: boolean) {
                 >
                     <template #rowreordericon>
                         <div
-                            class="py-2 px-1 flex items-center hover:bg-gray-100 rounded cursor-move"
+                            class="py-2 px-1 flex items-center border border-transparent rounded cursor-move hover:border-gray-300"
                             data-pc-section="reorderablerowhandle"
                             draggable="true"
                         >
                             <GripVertical
-                                class="size-5 hover:bg-gray-100"
+                                class="size-5"
                             />
                         </div>
                     </template>
@@ -225,15 +255,12 @@ async function onChecked(task: Task, completed: boolean) {
                     </template>
                 </Column>
                 <Column class="w-5">
-                    <template #body="slotProps">
+                    <template #body="{ data: task }">
                         <div class="flex h-full items-center">
                             <input
                                 type="checkbox"
-                                :checked="slotProps.data.is_completed"
-                                @change="e => onChecked(
-                                    slotProps.data,
-                                        (e.target as HTMLInputElement).checked
-                                    )"
+                                :checked="task.is_completed"
+                                @change="e => onChecked(task, (e.target as HTMLInputElement).checked, e)"
                                 class="size-5 accent-green-600 focus:ring-green-500"
                             />
                         </div>
@@ -247,7 +274,12 @@ async function onChecked(task: Task, completed: boolean) {
                     sortable
                     filter
                     filterPlaceholder="Filter by title"
-                    >
+                >
+                    <template #body="{ data: task }">
+                        <span data-task-title :class="{ strike: task.is_completed }">
+                            {{ task.title }}
+                        </span>
+                    </template>
                 </Column>
 
                 <!-- Completed at -->
@@ -305,14 +337,9 @@ input[type="checkbox"]:checked {
     accent-color: var(--color-green-600) !important;
 }
 
-
 .strike {
     position: relative;
     text-decoration: line-through;
-    text-decoration-color: var(--color-green-600);
-    text-decoration-thickness: 2px;
-    transition: text-decoration 300ms ease-in-out;
-    background-color: var(--color-green-100);
 }
 
 .task-leave-active {
