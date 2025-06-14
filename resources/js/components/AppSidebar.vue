@@ -11,12 +11,12 @@ import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: route('dashboard'),
+        href: route('dashboard', {}, false),
         icon: LayoutGrid,
     },
     {
         title: 'All Tasks',
-        href: route('tasks.index'),
+        href: route('tasks.index', {}, false),
         icon: LayoutList,
     },
 ];
@@ -24,15 +24,34 @@ const mainNavItems: NavItem[] = [
 const priorityItems: NavItem[] = [
     {
         title: 'High Priority',
-        href: route('tasks.index', { priority: 'high' }),
+        href: route('tasks.index', { priority: 'high' }, false),
     },
     {
         title: 'Medium Priority',
-        href: route('tasks.index', { priority: 'medium' }),
+        href: route('tasks.index', { priority: 'medium' }, false),
     },
     {
         title: 'Low Priority',
-        href: route('tasks.index', { priority: 'low' }),
+        href: route('tasks.index', { priority: 'low' }, false),
+    },
+];
+
+const dueDateItems: NavItem[] = [
+    {
+        title: 'Overdue',
+        href: route('tasks.index', { due: 'overdue' }, false),
+    },
+    {
+        title: 'Due Today',
+        href: route('tasks.index', { due: 'today' }, false),
+    },
+    {
+        title: 'Due This Week',
+        href: route('tasks.index', { due: 'thisweek' }, false),
+    },
+    {
+        title: 'Due This Month',
+        href: route('tasks.index', { due: 'thismonth' }, false),
     },
 ];
 
@@ -56,9 +75,11 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" groupLabel="Where to?" />
+            <NavMain :items="mainNavItems" groupLabel="Where to?" class="mb-2" />
 
-            <NavMain :items="priorityItems" groupLabel="Filter Tasks by Priority" />
+            <NavMain :items="priorityItems" groupLabel="View Tasks by Priority" class="mb-2" />
+
+            <NavMain :items="dueDateItems" groupLabel="View Tasks by Due Date" class="mb-2" />
         </SidebarContent>
 
         <SidebarFooter>

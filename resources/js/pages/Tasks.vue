@@ -8,33 +8,71 @@ import { Button } from '@/components/ui/button';
 import { ChevronUp, ChevronDown, GripVertical, Check, CircleCheck } from 'lucide-vue-next'
 import TaskFormModal from '@/components/TaskFormModal.vue'
 
-// PrimeVue filter state
+// PrimeVue filter state for DataTable
 const globalFilter = ref<string | null>(null)
 const filters = ref({
   'global': { value: null, matchMode: 'contains' },
 })
 
-// modal state
+const breadcrumbs = computed<BreadcrumbItem[]>(() => {
+    const items: BreadcrumbItem[] = [
+        { title: 'Tasks', href: route('tasks.index') },
+    ]
+
+    // “Completed Tasks” view
+    if (route().current('tasks.completed')) {
+        items.push({
+        title: 'Completed Tasks',
+        href: route('tasks.completed'),
+        })
+    }
+    // Due date filters
+    else if (page.props.due) {
+        const titles: Record<string,string> = {
+            today: 'Due Today',
+            thisweek: 'Due This Week',
+            thismonth: 'Due This Month',
+            overdue: 'Overdue',
+        }
+        items.push({
+        title: titles[page.props.due] || 'Filtered',
+        href:  route('tasks.index', { due: page.props.due }),
+        })
+    }
+    // Priority filters
+    else if (page.props.priority) {
+        const titles: Record<string,string> = {
+            high: 'High Priority',
+            medium: 'Medium Priority',
+            low: 'Low Priority',
+            none: 'No Priority',
+        }
+        items.push({
+        title: titles[page.props.priority] || 'Filtered',
+        href:  route('tasks.index', { priority: page.props.priority }),
+        })
+    }
+
+    return items
+})
+
 const isModalOpen = ref(false)
 const taskToEdit = ref<Task|undefined>(undefined)
-
-function openCreate(task: undefined) {
-    taskToEdit.value = undefined
-    isModalOpen.value = true
-}
-function openEdit(task: Task) {
-    taskToEdit.value = task
-    isModalOpen.value = true
-}
-// refresh after save
-function onSaved() {
-  // simple Inertia reload
-    window.location.reload()
-}
-
 const showReorderButtons = ref(false)
 const showCompleted = ref(false)
 const form = useForm({ order: [] as number[] })
+const range = ref<[Date|null, Date|null]>([null, null])
+const props = defineProps<{ tasks: Task[] }>()
+const page = usePage<{ flash: Record<string, string> }>()
+const tasks = ref<Task[]>(props.tasks);
+
+const completedTasks = computed(() =>
+    tasks.value
+        .filter((t) => t.is_completed)
+        .sort((a, b) =>
+            new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+        )
+);
 
 const filteredTasks = computed(() => {
     return tasks.value.filter(task => {
@@ -43,12 +81,24 @@ const filteredTasks = computed(() => {
     })
 })
 
-// handle row-reorder event
+function openCreate(task: undefined) {
+    taskToEdit.value = undefined
+    isModalOpen.value = true
+}
+
+function openEdit(task: Task) {
+    taskToEdit.value = task
+    isModalOpen.value = true
+}
+
+function onSaved() {
+    window.location.reload()
+}
+
 function onRowReorder(event: any) {
     tasks.value = event.value
     form.order = tasks.value.map(t => t.id)
 
-    // send to server
     form.post(route('tasks.reorder'), {
         preserveState: true,
         preserveScroll: true,
@@ -91,35 +141,6 @@ function moveDown(i: number) {
     })
 }
 
-// format dates (optional)
-function formatDate(task: Task) {
-    return task.completed_at ? new Date(task.completed_at).toLocaleString() : '—'
-}
-
-const breadcrumbs: BreadcrumbItem[] = [{
-    title: 'Tasks',
-    href: route('tasks.index'),
-}, ];
-
-const props = defineProps<{ tasks: Task[] }>()
-const page = usePage<{ flash: Record<string, string> }>()
-const tasks = ref<Task[]>(props.tasks);
-
-watch(() => props.tasks, (newTasks) => { tasks.value = newTasks })
-
-/* Computed lists */
-const todoTasks = computed(() =>
-    tasks.value.filter((t) => !t.is_completed)
-);
-
-const completedTasks = computed(() =>
-    tasks.value
-        .filter((t) => t.is_completed)
-        .sort((a, b) =>
-            new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
-        )
-);
-
 function addTask() {
     form.post(route('task.store'), {
         onSuccess: () => {
@@ -134,18 +155,7 @@ function addTask() {
     });
 }
 
-function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function animateStrikeThenRemove(el: Element, done: () => void) {
-    el.classList.add('strike');
-    requestAnimationFrame(() => {
-        el.classList.add('strike--active')
-    });
-    setTimeout(done, 500);
-}
-
+// Handles animation and updates when a task is checked or unchecked.
 function onChecked(task: Task, completed: boolean, e: Event) {
     const tr = (e.target as HTMLElement).closest('tr')
 
@@ -175,12 +185,12 @@ function onChecked(task: Task, completed: boolean, e: Event) {
             {
                 preserveScroll: true,
                 onSuccess: () =>
-                toast.success(
-                    `Task marked as ${completed ? 'complete' : 'incomplete'}`
-                ),
+                    toast.success(
+                        `Task marked as ${completed ? 'complete' : 'incomplete'}`
+                    ),
                 onError: () => {
-                task.is_completed = !completed
-                toast.error('Error updating task')
+                    task.is_completed = !completed
+                    toast.error('Error updating task')
                 },
             }
         )

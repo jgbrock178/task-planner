@@ -13,9 +13,17 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $priority = $request->query('priority');
+        $due = $request->query('due');
 
         $tasks = Task::where('user_id', Auth::id())
             ->when($priority, fn ($q) => $q->where('priority', $priority))
+            ->when($due === 'today', fn ($q) => $q->whereDate('due_date', today()))
+            ->when($due === 'thisweek', fn ($q) => $q->whereBetween('due_date', [now()->startOfWeek(), now()->endOfWeek()]))
+            ->when($due === 'thismonth', fn ($q) => $q->whereBetween('due_date', [now()->startOfMonth(), now()->endOfMonth()]))
+            ->when($due === 'overdue', fn ($q) => $q
+                ->whereDate('due_date', '<', today())
+                ->where('completed_at', null)
+            )
             ->orderBy('sort_order')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -23,6 +31,7 @@ class TaskController extends Controller
         return Inertia::render('Tasks', [
             'tasks' => $tasks,
             'priority' => $priority,
+            'due' => $due,
         ]);
     }
 
