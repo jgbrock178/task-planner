@@ -116,7 +116,7 @@ function submit() {
         :open="props.open"
         @update:open="val => emit('update:open', val)"
     >
-        <DialogContent>
+        <DialogContent class="p-4">
             <DialogHeader>
                 <DialogTitle>{{ form.id ? 'Edit Task' : 'New Task' }}</DialogTitle>
                 <DialogDescription class="sr-only">
@@ -143,7 +143,7 @@ function submit() {
                         {{ form.errors.title }}
                     </p>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 space-y-6 md:space-y-0 md:gap-3">
                     <div class="grid w-full items-center gap-1.5">
                         <Label for="task-priority">
                             Task Priority

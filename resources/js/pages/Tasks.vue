@@ -203,9 +203,14 @@ function onChecked(task: Task, completed: boolean, e: Event) {
     <Head title="Tasks" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl py-4 px-8">
+        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl py-4 px-2 md:px-8">
             <div class="mb-4 flex items-center space-x-2">
-                <Button @click="openCreate">New Task</Button>
+                <Button
+                    size="sm"
+                    @click="openCreate"
+                >
+                    New Task
+                </Button>
                 <Button
                     v-if="completedTasks.length > 0"
                     size="sm"
@@ -213,7 +218,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     @click="showCompleted = !showCompleted"
                 >
                     <Check class="size-4" />
-                    {{ showCompleted ? 'Hide completed tasks' : 'Show completed tasks' }}
+                    {{ showCompleted ? 'Hide completed' : 'Show completed' }}
                 </Button>
 
                 <!-- <Button
@@ -245,7 +250,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                 <!-- drag handle -->
                 <Column
                     rowReorder
-                    class="w-5 p-0!"
+                    class="w-5 p-0! hidden md:table-cell"
                     v-if="!showReorderButtons"
                 >
                     <template #rowreordericon>
@@ -294,8 +299,9 @@ function onChecked(task: Task, completed: boolean, e: Event) {
 
                 <!-- Checkbox for completion -->
                 <Column
-                    class="w-5"
+                    class="w-5 pl-4"
                     field="is_completed"
+                    bodyClass="pr-2! pl-0! md:px-[14px]!"
                 >
                     <template #header>
                         <CircleCheck class="size-5" />
@@ -322,16 +328,41 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     filterPlaceholder="Filter by title"
                 >
                     <template #body="{ data: task }">
-                        <span>
-                            <button
-                                data-task-title
-                                @click="openEdit(task)"
-                                class="hover:underline cursor-pointer"
-                                :class="{ strike: task.is_completed }"
-                            >
-                                {{ task.title }}
-                            </button>
-                        </span>
+                        <div class="flex flex-col gap-1.5">
+                            <span>
+                                <button
+                                    data-task-title
+                                    @click="openEdit(task)"
+                                    class="hover:underline cursor-pointer font-semibold md:font-normal text-left"
+                                    :class="{ strike: task.is_completed }"
+                                >
+                                    {{ task.title }}
+                                </button>
+                            </span>
+                            <span class="md:hidden flex gap-2 items-center">
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                    :class="{
+                                        'bg-red-100 text-red-800': task.priority === 'high',
+                                        'bg-yellow-100 text-yellow-800': task.priority === 'medium',
+                                        'bg-green-100 text-green-800': task.priority === 'low',
+                                        'bg-gray-100 text-gray-800': task.priority === 'none',
+                                    }"
+                                >
+                                    <ArrowUp v-if="task.priority === 'high'" class="inline size-3 me-1" />
+                                    <ArrowRight v-if="task.priority === 'medium'" class="inline size-3 me-1" />
+                                    <ArrowDown v-if="task.priority === 'low'" class="inline size-3 me-1" />
+                                    {{ task.priority.charAt(0).toUpperCase() + task.priority.slice(1) }}
+                                </span>
+                                <span v-if="task.due_date" class="text-sm">
+                                    Due
+                                    {{ task.due_date
+                                        ? new Date(task.due_date).toLocaleDateString()
+                                        : '—'
+                                    }}
+                                </span>
+                            </span>
+                        </div>
                     </template>
                 </Column>
 
@@ -342,6 +373,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     sortable
                     filter
                     filterPlaceholder="Filter by date"
+                    class="hidden md:table-cell"
                 >
 
                     <template #body="{ data }">
@@ -359,6 +391,7 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     sortable
                     filter
                     filterPlaceholder="Filter by priority"
+                    class="hidden md:table-cell"
                 >
                     <template #body="{ data }">
                         <span
@@ -385,7 +418,8 @@ function onChecked(task: Task, completed: boolean, e: Event) {
                     sortable
                     filter
                     filterPlaceholder="Filter by date"
-                    >
+                    class="hidden md:table-cell"
+                >
                     <template #body="{ data }">
                         {{ data.completed_at
                             ? new Intl.DateTimeFormat('en-GB', {
@@ -445,13 +479,26 @@ input[type="checkbox"]:checked {
     opacity: 0;
 }
 
+
 .p-datatable .p-datatable-tbody > tr > td,
 .p-datatable .p-datatable-thead > tr > th {
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-size: 14px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    font-size: 16px;
 }
 
+@media (width >= 767px) {
+    .p-datatable .p-datatable-tbody > tr > td,
+    .p-datatable .p-datatable-thead > tr > th {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        font-size: 14px;
+    }
+}
 .p-datatable {
     --p-datatable-row-hover-background: #f9fafb; /* Tailwind gray-50 */
 }
