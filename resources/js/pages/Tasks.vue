@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { type BreadcrumbItem, type Task } from '@/types';
 import { toast } from 'vue-sonner'
@@ -24,15 +24,33 @@ function onRowReorder(event: any) {
 }
 
 // accessible move up/down buttons
-function moveUp(index: number) {
-    if (index === 0) return
-    const row = tasks.value.splice(index, 1)[0]
-    tasks.value.splice(index - 1, 0, row)
+function moveUp(i: number) {
+    if (i === 0) return
+    // grab the task id before we reorder
+    const id = tasks.value[i].id
+
+    // produce a brand-new array so DataTable updates
+    const reordered = [...tasks.value]
+    ;[reordered[i-1], reordered[i]] = [reordered[i], reordered[i-1]]
+    tasks.value = reordered
+
+    // after DOM updates, focus the same button
+    nextTick(() => {
+        document.getElementById(`move-up-${id}`)?.focus()
+    })
 }
-function moveDown(index: number) {
-    if (index === tasks.value.length - 1) return
-    const row = tasks.value.splice(index, 1)[0]
-    tasks.value.splice(index + 1, 0, row)
+
+function moveDown(i: number) {
+    if (i === tasks.value.length - 1) return
+    const id = tasks.value[i].id
+
+    const reordered = [...tasks.value]
+    ;[reordered[i], reordered[i+1]] = [reordered[i+1], reordered[i]]
+    tasks.value = reordered
+
+    nextTick(() => {
+        document.getElementById(`move-down-${id}`)?.focus()
+    })
 }
 
 // format dates (optional)
@@ -148,7 +166,7 @@ async function onChecked(task: Task, completed: boolean) {
             </div>
 
             <DataTable
-                :value="tasks"
+                v-model:value="tasks"
                 dataKey="id"
                 rowReorder
                 removableSort
@@ -179,25 +197,27 @@ async function onChecked(task: Task, completed: boolean) {
                 <!-- up/down buttons -->
                 <Column
                     header="Reorder"
-                    class="w-10 px-0!"
+                    class="w-10 px-0! py-0!"
                     v-if="showReorderButtons"
                 >
-                    <template #body="slotProps">
+                    <template #body="{ data: task, index }">
                         <Button
+                            :id="`move-up-${task.id}`"
                             variant="outline"
                             class="p-1 size-6 rounded-r-none"
-                            @click="moveUp(slotProps.rowIndex)"
-                            :disabled="slotProps.rowIndex === 0"
+                            @click="moveUp(index)"
+                            :disabled="index === 0"
                             aria-label="Move up"
                         >
                             <ChevronUp class="size-4" />
                         </Button>
 
                         <Button
+                            :id="`move-down-${task.id}`"
                             variant="outline"
                             class="p-1 size-6 rounded-l-none"
-                            @click="moveDown(slotProps.rowIndex)"
-                            :disabled="slotProps.rowIndex === tasks.length - 1"
+                            @click="moveDown(index)"
+                            :disabled="index === tasks.length - 1"
                             aria-label="Move down"
                         >
                             <ChevronDown class="size-4" />
@@ -258,6 +278,14 @@ async function onChecked(task: Task, completed: boolean) {
     padding-top: 10px;
     padding-bottom: 10px;
     font-size: 14px;
+}
+
+:deep(.p-datatable tbody tr:focus-within) {
+    background-color: var(--color-gray-100);
+}
+
+:deep(.p-datatable tbody tr:hover) {
+    background-color: var(--color-gray-50);
 }
 
 input[type="checkbox"] {
