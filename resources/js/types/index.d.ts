@@ -49,3 +49,10 @@ export interface Task {
     created_at: string;
     updated_at: string;
 }
+
+export interface PersonalToken {
+    id: number;
+    name: string;
+    last_used_at: string | null;
+    created_at: string;
+}
