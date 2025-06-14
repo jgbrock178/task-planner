@@ -57,7 +57,7 @@ function revokeToken(id: number) {
         <Head title="API Tokens" />
 
         <SettingsLayout>
-            <div class="space-y-6">
+            <div class="space-y-6 dark:bg-transparent">
                 <HeadingSmall
                     title="API Tokens"
                     description="Create and manage your personal API tokens"
@@ -66,7 +66,7 @@ function revokeToken(id: number) {
                 <!-- NEW TOKEN BANNER -->
                 <div
                     v-if="props.newToken"
-                    class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded"
+                    class="bg-blue-50 dark:bg-gray-800/30 border-l-4 border-blue-400 p-4 rounded"
                 >
                 <div class="flex items-center justify-between">
                     <span class="font-medium">New API Token:</span>
@@ -74,7 +74,7 @@ function revokeToken(id: number) {
                         {{ showFull ? 'Hide full token' : 'Show full token' }}
                     </Button>
                 </div>
-                <code class="block font-mono bg-gray-100 mt-2 p-2 rounded break-all">
+                <code class="block font-mono bg-gray-100 dark:bg-gray-700 mt-2 p-2 rounded break-all">
                     <!-- mask all but last 8 chars -->
                     {{ showFull
                         ? props.newToken
@@ -107,7 +107,7 @@ function revokeToken(id: number) {
 
                 <!-- TOKENS TABLE -->
                 <table class="w-full border-collapse text-sm">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-50 dark:bg-transparent">
                         <tr>
                             <th class="text-left p-2">Name</th>
                             <th class="text-left p-2">Last Used</th>
@@ -119,7 +119,7 @@ function revokeToken(id: number) {
                         <tr
                             v-for="token in tokens"
                             :key="token.id"
-                            class="border-t hover:bg-gray-50"
+                            class="border-t"
                         >
                             <td class="p-2">{{ token.name }}</td>
                             <td class="p-2">{{ token.last_used_at ?? '—' }}</td>
