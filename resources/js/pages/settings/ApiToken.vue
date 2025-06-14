@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'vue-sonner'
 import type { BreadcrumbItem, PersonalToken } from '@/types'
+import { Trash, CircleAlert } from 'lucide-vue-next'
 
 const breadcrumbItems: BreadcrumbItem[] = [
   { title: 'API Tokens', href: route('api-tokens.index') },
@@ -52,85 +53,93 @@ function revokeToken(id: number) {
 </script>
 
 <template>
-  <AppLayout :breadcrumbs="breadcrumbItems">
-    <Head title="API Tokens" />
+    <AppLayout :breadcrumbs="breadcrumbItems">
+        <Head title="API Tokens" />
 
-    <SettingsLayout>
-      <div class="space-y-6">
-        <HeadingSmall
-          title="API Tokens"
-          description="Create and manage your personal API tokens"
-        />
+        <SettingsLayout>
+            <div class="space-y-6">
+                <HeadingSmall
+                    title="API Tokens"
+                    description="Create and manage your personal API tokens"
+                />
 
-        <!-- NEW TOKEN BANNER -->
-        <div
-          v-if="props.newToken"
-          class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded"
-        >
-          <div class="flex items-center justify-between">
-            <span class="font-medium">New API Token:</span>
-            <Button size="sm" variant="outline" @click="showFull = !showFull">
-              {{ showFull ? 'Hide full token' : 'Show full token' }}
-            </Button>
-          </div>
-          <code class="block font-mono bg-gray-100 mt-2 p-2 rounded break-all">
-            <!-- mask all but last 8 chars -->
-            {{ showFull
-                ? props.newToken
-                : '••••••••' + props.newToken.slice(-8) }}
-          </code>
-          <p class="text-sm text-gray-500 mt-2">
-            Make sure to copy this now. You won’t be able to see it again.
-          </p>
-        </div>
-
-        <!-- CREATE FORM -->
-        <form @submit.prevent="createToken" class="flex gap-2">
-          <Input
-            v-model="form.name"
-            placeholder="Token name (e.g. “CLI script”)"
-            :error="form.errors.name"
-          />
-          <Button type="submit" :disabled="form.processing">
-            Create
-          </Button>
-        </form>
-
-        <!-- TOKENS TABLE -->
-        <table class="w-full border-collapse">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="text-left p-2">Name</th>
-              <th class="text-left p-2">Last Used</th>
-              <th class="text-left p-2">Created</th>
-              <th class="p-2">&nbsp;</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="token in tokens"
-              :key="token.id"
-              class="border-t hover:bg-gray-50"
-            >
-              <td class="p-2">{{ token.name }}</td>
-              <td class="p-2">{{ token.last_used_at ?? '—' }}</td>
-              <td class="p-2">
-                {{ new Date(token.created_at).toLocaleString() }}
-              </td>
-              <td class="p-2 text-right">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  @click="revokeToken(token.id)"
-                  aria-label="Revoke token"
+                <!-- NEW TOKEN BANNER -->
+                <div
+                    v-if="props.newToken"
+                    class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded"
                 >
-                  &times;
-                </Button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </SettingsLayout>
-  </AppLayout>
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">New API Token:</span>
+                    <Button size="sm" variant="outline" @click="showFull = !showFull">
+                        {{ showFull ? 'Hide full token' : 'Show full token' }}
+                    </Button>
+                </div>
+                <code class="block font-mono bg-gray-100 mt-2 p-2 rounded break-all">
+                    <!-- mask all but last 8 chars -->
+                    {{ showFull
+                        ? props.newToken
+                        : '••••••••' + props.newToken.slice(-8) }}
+                </code>
+                <p class="text-sm text-gray-500 mt-2">
+                    Make sure to copy this now. You won’t be able to see it again.
+                </p>
+                </div>
+
+                <!-- CREATE FORM -->
+                <form @submit.prevent="createToken" class="flex gap-2">
+                    <div class="w-full flex flex-col gap-1.5">
+                        <Input
+                            v-model="form.name"
+                            placeholder="Token name (e.g. “CLI script”)"
+                            :error="form.errors.name"
+                            :class="form.errors.name ? 'border-red-500 bg-red-50' : ''"
+                        />
+                        <p v-if="form.errors.name" class="text-red-600 text-sm flex items-center">
+                            <CircleAlert class="inline mr-1 size-5" />
+                            {{ form.errors.name }}
+                        </p>
+                    </div>
+                    <Button type="submit" :disabled="form.processing">
+                        Create Token
+                    </Button>
+
+                </form>
+
+                <!-- TOKENS TABLE -->
+                <table class="w-full border-collapse text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left p-2">Name</th>
+                            <th class="text-left p-2">Last Used</th>
+                            <th class="text-left p-2">Created</th>
+                            <th class="p-2">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="token in tokens"
+                            :key="token.id"
+                            class="border-t hover:bg-gray-50"
+                        >
+                            <td class="p-2">{{ token.name }}</td>
+                            <td class="p-2">{{ token.last_used_at ?? '—' }}</td>
+                            <td class="p-2">
+                                {{ new Date(token.created_at).toLocaleString() }}
+                            </td>
+                            <td class="p-2 text-right">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    @click="revokeToken(token.id)"
+                                    aria-label="Revoke token"
+                                >
+                                    <Trash class="size-4" />
+                                </Button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </SettingsLayout>
+    </AppLayout>
 </template>

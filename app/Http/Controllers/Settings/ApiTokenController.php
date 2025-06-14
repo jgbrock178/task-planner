@@ -24,6 +24,9 @@ class ApiTokenController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+        ], [
+            'name.required' => 'You must provide a name for the token.',
+            'name.max' => 'The token name may not be greater than 255 characters.',
         ]);
 
         // createToken() returns a NewAccessToken object:
